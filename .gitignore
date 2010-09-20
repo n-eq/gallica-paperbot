@@ -1,0 +1,5 @@
+config.py
+*.pyc
+dictionary.db
+batches.json
+last_retweet

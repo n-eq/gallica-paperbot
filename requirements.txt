@@ -1,0 +1,4 @@
+lxml
+tweepy
+requests
+feedparser
