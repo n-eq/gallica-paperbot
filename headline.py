@@ -13,8 +13,11 @@ import twitter
 import config
 
 def main(argv):
+    dry_run = False
     if len(argv) > 1: # for testing
         date = datetime.datetime.strptime(argv[1], '%Y/%m/%d')
+        if (len(argv) > 2 and argv[2] == "--dryrun"):
+            dry_run = True
     else:
         today = datetime.date.today()
         date = datetime.date(today.year-100, today.month, today.day)
@@ -32,11 +35,11 @@ def main(argv):
     headlines.sort(tweetability)
     print("Sorted headlines: ")
     for h in headlines[:10]:
-        print(h['text'].encode('utf-8'))
+        print(h['text'].encode('utf-8'), h['paper'])
 
     if (len(headlines) > 0):
         msg = twitter_msg(headlines[0], date)
-        twitter.tweet(msg)
+        twitter.tweet(msg, dry_run)
     else:
         print("No headlines found.")
 
@@ -55,6 +58,7 @@ def prettify_paper_name(p):
     if p[len(p)-1] == ' ':
         p = p[:(len(p) -1)]
         print("Removing ending whitespace: ", p)
+    return p
 
 
 def get_records(date):
@@ -87,7 +91,7 @@ def get_records(date):
                         paper_name = child.text
                         print("new  paper: ", paper_name)
 
-            prettify_paper_name(paper_name)
+            paper_name = prettify_paper_name(paper_name)
 
             for child in list(doc_records[i]):
                 if 'extraRecordData' in child.tag:
@@ -189,7 +193,7 @@ def twitter_msg(headline, date):
     snippet = headline['text'][0:remaining]
 
     if headline['paper'] != '':
-        msg = '%s (%s): "%s" %s' % (d, headline['paper'], snippet, headline['url'])
+        msg = '%s: "%s" (%s) %s' % (d, snippet, headline['paper'], headline['url'])
     else:
         msg = '%s: "%s" %s' % (d, snippet, headline['url'])
     return msg
