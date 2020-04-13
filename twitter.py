@@ -12,10 +12,11 @@ auth.set_access_token(config.twitter_oauth_access_token_key,
                       config.twitter_oauth_access_token_secret)
 twitter = tweepy.API(auth)
 
-def tweet(msg):
-    print("Tweeting: ", msg)
+def tweet(msg, dry_run = False):
     try:
-        twitter.update_status(msg)
+        print("Tweeting: ", msg)
+        if not dry_run:
+            twitter.update_status(msg)
     except Exception as e:
         print("There was an exception tweeting.")
         print(e)
