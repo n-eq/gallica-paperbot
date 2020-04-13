@@ -5,6 +5,7 @@ import dbm
 import sys
 import urllib, urllib2
 import datetime
+import re
 
 from lxml import etree
 
@@ -43,13 +44,17 @@ def main(argv):
 
 
 def prettify_paper_name(p):
+    p = re.sub("\(.*?\)", "", p)
+    print("p after deleting parentheses: ", p)
+
     colon = p.find(':')
     if colon != -1:
         p = p[:colon]
-        print("Stripping paper name: ", p)
-        if p[len(p)-1] == ' ':
-            p = p[:(len(p) -1)]
-            print("Removing ending whitespace: ", p)
+
+    print("Stripping paper name: ", p)
+    if p[len(p)-1] == ' ':
+        p = p[:(len(p) -1)]
+        print("Removing ending whitespace: ", p)
 
 
 def get_records(date):
