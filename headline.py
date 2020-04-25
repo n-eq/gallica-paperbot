@@ -6,6 +6,7 @@ import sys
 import urllib, urllib2
 import datetime
 import re
+import requests
 
 from lxml import etree
 
@@ -22,7 +23,8 @@ def main(argv):
         today = datetime.date.today()
         date = datetime.date(today.year-100, today.month, today.day)
 
-    sys.stdout = open(config.logfile, 'a')
+    if not dry_run:
+        sys.stdout = open(config.logfile, 'a')
 
     print("Running script for " + date.strftime("%m/%d/%Y"))
 
@@ -35,15 +37,21 @@ def main(argv):
     headlines.sort(tweetability)
     print("Sorted headlines: ")
     for h in headlines[:10]:
-        print(h['text'].encode('utf-8'), h['paper_name'])
+        print(h['text'].encode('utf-8'), h['paper'])
 
     if (len(headlines) > 0):
-        msg = twitter_msg(headlines[0], date)
-        twitter.tweet(msg, dry_run)
+        h = headlines[0]
+        
+        f = get_frontpage(h, date)
+        h['front_page'] = f
+
+        msg = format_status(h, date)
+        twitter.tweet(msg, dry_run, f)
     else:
         print("No headlines found.")
 
-    sys.stdout.close()
+    if not dry_run:
+        sys.stdout.close()
 
 
 def prettify_paper_name(p):
@@ -186,8 +194,19 @@ def tweetability(a, b):
         return ((block['height'] * block['width']) ^ 2) * block['word_ratio'] * len(block['text']) * (1/block['vpos'])
     return cmp(index(b), index(a))
 
+def get_frontpage(headline, date):
+    fname = "./" + datetime.datetime.strftime(date, '%d/%m/%Y').replace('/', '_') + ".jpeg"
 
-def twitter_msg(headline, date):
+    source_url = headline['url'] + "/f1.jpeg?download=1"
+    with open(fname, "wb") as f:
+        f.write(requests.get(source_url).content)
+    
+    if os.path.exists(fname):
+        return fname
+    else:
+        return ""
+
+def format_status(headline, date):
     d = datetime.datetime.strftime(date, '%d/%m/%Y')
     remaining = 280 - (len(d) + len(headline['url'])) 
     snippet = headline['text'][0:remaining]
