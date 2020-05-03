@@ -21,7 +21,6 @@ import time
 import config
 import random
 import datetime
-import requests
 
 import json
 
@@ -29,15 +28,8 @@ from twitter import twitter
 
 def all_urls(tweet):
     for u in tweet.entities['urls']:
-        url = u['expanded_url']
-        try:
-            r = requests.get(url)
-            if not r.url.startswith('https://gallica.bnf.fr/ark:'):
-                return False
-        except:
-            # if we couldn't fetch the URL we don't want to tweet it anyway
-            return False
-    return True
+        url = u['display_url']
+        return url.startswith("gallica.bnf.fr/ark:")
 
 def retweetability(a, b):
     ret = cmp(a.retweet_count, b.retweet_count)
