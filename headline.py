@@ -235,7 +235,7 @@ class Dictionary:
             self.db = dbm.open('dictionary', 'r')
 
     def _make(self):
-        word_file = '/etc/dictionaries-common/words'
+        word_file = config.dico
         if not os.path.isfile(word_file):
             raise Exception("can't find word file: %s" % word_file)
         db = dbm.open('dictionary', 'c')
