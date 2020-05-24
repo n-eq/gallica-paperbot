@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
 import os
-import dbm
+import dbm.ndbm
 import sys
-import urllib, urllib2
+import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
 import datetime
 import re
 import requests
@@ -34,7 +34,8 @@ def main(argv):
     for r in records:
         headlines.extend(blocks(r))
 
-    headlines.sort(tweetability)
+    headlines.sort(key=cmp_block)
+    headlines.reverse()
     print("Sorted headlines: ")
     for h in headlines[:10]:
         print(h['text'].encode('utf-8'), h['paper'])
@@ -83,7 +84,7 @@ def get_records(date):
     print("Search URL: ", search)
 
     try:
-        xml = urllib2.urlopen(search).read()
+        xml = urllib.request.urlopen(search).read()
         doc = etree.fromstring(xml)
         doc_records = doc[4]
         for i in range(len(doc_records)):
@@ -138,8 +139,9 @@ def blocks(record):
     blocks = []
     try:
         # some pages are not digitized, and don't have ocr
-        xml = urllib.urlopen(url).read()
-        doc = etree.fromstring(xml)
+        xml = urllib.request.urlopen(url).read()
+        p = etree.XMLParser(encoding='utf-8')
+        doc = etree.fromstring(xml, parser=p)
     except Exception as e:
         print(e)
         return blocks
@@ -189,10 +191,8 @@ def blocks(record):
 
     return blocks
 
-def tweetability(a, b):
-    def index(block):
-        return ((block['height'] * block['width']) ^ 2) * block['word_ratio'] * len(block['text']) * (1/block['vpos'])
-    return cmp(index(b), index(a))
+def block_cmp(block):
+    return ((block['height'] * block['width']) ^ 2) * block['word_ratio'] * len(block['text']) * (1/block['vpos'])
 
 def get_frontpage(headline, date):
     fname = "./" + datetime.datetime.strftime(date, '%d/%m/%Y').replace('/', '_') + ".jpeg"
@@ -225,20 +225,20 @@ class Dictionary:
         w = w.lower()
         if len(w) < 4:
             return False
-        return self.db.has_key(w.encode('utf-8')) == 1
+        return (w.encode('utf-8') in self.db) == 1
 
     def _open(self):
         try:
-            self.db = dbm.open('dictionary', 'r')
+            self.db = dbm.ndbm.open('dictionary', 'r')
         except dbm.error:
             self._make()
-            self.db = dbm.open('dictionary', 'r')
+            self.db = dbm.ndbm.open('dictionary', 'r')
 
     def _make(self):
         word_file = config.dico
         if not os.path.isfile(word_file):
             raise Exception("can't find word file: %s" % word_file)
-        db = dbm.open('dictionary', 'c')
+        db = dbm.ndbm.open('dictionary', 'c')
         for word in open(word_file, 'r'):
             word = word.lower().strip()
             db[word] = '1'
