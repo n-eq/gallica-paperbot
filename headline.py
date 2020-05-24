@@ -171,7 +171,8 @@ def blocks(record):
         vpos = float(b.attrib['VPOS'])
 
         # ignore masthead
-        if vpos < 1800:
+        # if vpos < 1800:
+        if vpos < 600:
             continue
 
         # ignore text > 80 characters, we're looking for short headlines
