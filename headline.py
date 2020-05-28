@@ -192,7 +192,7 @@ def blocks(record):
 
     return blocks
 
-def block_cmp(block):
+def cmp_block(block):
     return ((block['height'] * block['width']) ^ 2) * block['word_ratio'] * len(block['text']) * (1/block['vpos'])
 
 def get_frontpage(headline, date):
