@@ -26,7 +26,7 @@ def main(argv):
     if not dry_run:
         sys.stdout = open(config.logfile, 'a')
 
-    print("Running script for " + date.strftime("%m/%d/%Y"))
+    print("Running script for %s" % date.strftime("%m/%d/%Y"))
 
     records = get_records(date)
 
@@ -38,7 +38,7 @@ def main(argv):
     headlines.reverse()
     print("Sorted headlines: ")
     for h in headlines[:10]:
-        print(h['text'].encode('utf-8'), h['paper'])
+        print("[%d] %s, %s %s" % (cmp_block(h), h['text'].encode('utf-8'), h['paper'], h['url']))
 
     if (len(headlines) > 0):
         h = headlines[0]
@@ -57,16 +57,13 @@ def main(argv):
 
 def prettify_paper_name(p):
     p = re.sub("\(.*?\)", "", p)
-    print("p after deleting parentheses: ", p)
 
     colon = p.find(':')
     if colon != -1:
         p = p[:colon]
 
-    print("Stripping paper name: ", p)
     if p[len(p)-1] == ' ':
         p = p[:(len(p) -1)]
-        print("Removing ending whitespace: ", p)
     return p
 
 
@@ -81,7 +78,7 @@ def get_records(date):
              "(gallicapublication_date=%22" + day + "%22)"\
              "&suggest=10&keywords=#resultat-id-1"
 
-    print("Search URL: ", search)
+    print("Search URL: %s" % search)
 
     try:
         xml = urllib.request.urlopen(search).read()
@@ -98,7 +95,7 @@ def get_records(date):
                     # take the shortest title (there are two versions)
                     if (paper_name == '') or ((paper_name != '') and len(child.text) < len(paper_name)):
                         paper_name = child.text
-                        print("new  paper: ", paper_name)
+                        print("new  paper: %s" % paper_name)
 
             paper_name = prettify_paper_name(paper_name)
 
@@ -170,10 +167,22 @@ def blocks(record):
         w = int(b.attrib['WIDTH'])
         vpos = float(b.attrib['VPOS'])
 
-        # ignore masthead
-        # if vpos < 1800:
+        if record['paper'] in config.paper_blacklist:
+            print("Paper %s is blacklisted, skipping." % record['paper'])
+            continue
+
+        # Skip lines that are heuristically unlikely to be headlines
+        # TODO : move to a dedicated function
         if vpos < 600:
             continue
+        if record['paper'] == 'Le Journal':
+            if vpos < 1000:
+                print("Ignoring block %s because Le Journal and vpos < 1000" % text)
+                continue
+        if record['paper'] == 'Le Rappel':
+            if vpos < 1700:
+                print("Ignoring block %s because le rappel and vpos < 1000" % text)
+                continue
 
         # ignore text > 80 characters, we're looking for short headlines
         if len(text) > 80:
@@ -185,15 +194,14 @@ def blocks(record):
         b = {'text': text, 'confidence': confidence,
              'height': h, 'width': w, 'word_ratio': word_ratio,
              'vpos': vpos, 'url': record['url'], 'paper': record['paper']} 
-        print("Appending new block:")
-        print(b)
 
+        print("Appending new block: %s" % b)
         blocks.append(b)
 
     return blocks
 
 def cmp_block(block):
-    return ((block['height'] * block['width']) ^ 2) * block['word_ratio'] * len(block['text']) * (1/block['vpos'])
+    return ((block['height'] * block['width']) ^ 2) * block['word_ratio'] * len(block['text']) * (1 / block['vpos']) * block['confidence'] * block['word_ratio']
 
 def get_frontpage(headline, date):
     fname = "./" + datetime.datetime.strftime(date, '%d/%m/%Y').replace('/', '_') + ".jpeg"
