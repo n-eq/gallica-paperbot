@@ -113,7 +113,7 @@ def get_records(date):
                 if 'thumbnail' in child.tag:
                     thumbnail = child.text
                     raw_text = thumbnail.replace('thumbnail', 'texteBrut')
-                    url = thumbnail.replace('.thumbnail', '')
+                    url = "https://gallica.bnf.fr/ark:/12148/%s" % thumbnail.replace('.thumbnail', '')
 
             r = {'uri': uri, 'raw_text': raw_text, 'url': url, 'paper': paper_name}
             records.append(r)
@@ -206,7 +206,7 @@ def cmp_block(block):
 def get_frontpage(headline, date):
     fname = "./" + datetime.datetime.strftime(date, '%d/%m/%Y').replace('/', '_') + ".jpeg"
 
-    source_url = headline['url'] + "/f1.jpeg?download=1"
+    source_url = headline['url'] + "/f1.highres"
     with open(fname, "wb") as f:
         f.write(requests.get(source_url).content)
     
