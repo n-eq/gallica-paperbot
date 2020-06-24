@@ -113,7 +113,7 @@ def get_records(date):
                 if 'thumbnail' in child.tag:
                     thumbnail = child.text
                     raw_text = thumbnail.replace('thumbnail', 'texteBrut')
-                    url = "https://gallica.bnf.fr/ark:/12148/%s" % thumbnail.replace('.thumbnail', '')
+                    url = thumbnail.replace('.thumbnail', '')
 
             r = {'uri': uri, 'raw_text': raw_text, 'url': url, 'paper': paper_name}
             records.append(r)
