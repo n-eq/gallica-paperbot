@@ -31,13 +31,8 @@ def all_urls(tweet):
         url = u['display_url']
         return url.startswith("gallica.bnf.fr/ark:")
 
-def retweetability(a, b):
-    ret = cmp(a.retweet_count, b.retweet_count)
-    if ret == 0:
-        ret = cmp(a.favorite_count, b.favorite_count)
-        if ret == 0:
-            ret = cmp(a.user.followers_count, b.user.followers_count)
-    return ret
+def retweetability(a):
+    return a.retweet_count * 0.5 + a.favorite_count * 0.3 + a.user.followers_count * 0.2
 
 touchfile = "last_retweet"
 
@@ -48,7 +43,7 @@ else:
 
 tweets = twitter.search("gallica", count=100)
 
-tweets.sort(retweetability)
+tweets.sort(key=retweetability)
 
 new_last = None
 
@@ -75,7 +70,7 @@ for tweet in tweets:
 #         print(tweet.text, tweet.retweet_count * 3, tweet.favorite_count * 2,  tweet.user.followers_count)
         tweet.retweet()
     except Exception as e:
-        print e
+        print(e)
 
     i += 1
     if i == config.max_daily_retweets:
