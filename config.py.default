@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+logfile = "log.txt"
+max_daily_retweets = 2
+block = ['BotBNF', 'Blouzouga']
+dico = "/usr/share/dict/french"
+paper_blacklist = ['Feuilleton',
+	'Bulletin périodique de la presse anglaise',
+	'Bulletin de la cote',
+	'Semaine religieuse du Diocèse de Lyon',
+        'Feuilletons / Sénat',
+	'Haut-commissariat de la République française dans les provinces du Rhin. Bulletin de presse ["puis" Presse et information. Analyse de presse]',
+        'Bulletin périodique de la presse suisse',
+	'Bulletin périodique de la presse espagnole',
+	'Bulletin périodique de la presse hollandaise',
+        'Le Poilu de France. Journal des anciens combattants ["puis" Organe de l\'Association nationale des anciens combattants Le Poilu de France]',
+        'Bulletin municipal officiel de la Ville de Paris',
+        "Le XIXe siècle (Paris. 1871)",
+        "Le XIXe siècle",
+        "Bulletin religieux de l'Archidiocèse de Rouen",
+        "Bulletin des régions libérées",
+        "L'Afrique du Nord illustrée",
+        "Le Miroir des sports",
+        "Bulletin périodique de la presse japonaise",
+        "Bulletin quotidien de presse étrangère",
+        "Bulletin religieux de l'archidiocèse de Rouen",
+        "Bulletin périodique de la presse grecque",
+        "Bulletin périodique de la presse allemande",
+        "Comoedia"]
