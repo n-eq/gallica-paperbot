@@ -144,7 +144,7 @@ def blocks(record):
         return blocks
 
     for b in doc.xpath('//alto:TextBlock', namespaces=ns): 
-        text = []
+        words = []
         text_length = 0
         confidence = 0.0
         string_count = 0
@@ -152,7 +152,7 @@ def blocks(record):
         for l in b.xpath('alto:TextLine', namespaces=ns):
             for s in l.xpath('alto:String[@CONTENT]', namespaces=ns):
                 string = s.attrib['CONTENT']
-                text.append(string)
+                words.append(string)
                 text_length += len(string)
                 confidence += float(s.attrib['WC'])
                 string_count += 1
@@ -162,7 +162,7 @@ def blocks(record):
         if string_count == 0 or dictionary_words == 0:
             continue
 
-        text = ' '.join(text)
+        words = ' '.join(words)
         h = int(b.attrib['HEIGHT'])
         w = int(b.attrib['WIDTH'])
         vpos = float(b.attrib['VPOS'])
@@ -185,13 +185,13 @@ def blocks(record):
                 continue
 
         # ignore text > 80 characters, we're looking for short headlines
-        if len(text) > 80:
+        if len(words) > 80:
             continue
 
-        word_ratio = dictionary_words / len(text)
+        word_ratio = dictionary_words / string_count
         confidence = confidence / string_count
 
-        b = {'text': text, 'confidence': confidence,
+        b = {'text': words, 'confidence': confidence,
              'height': h, 'width': w, 'word_ratio': word_ratio,
              'vpos': vpos, 'url': record['url'], 'paper': record['paper']} 
 
@@ -232,9 +232,8 @@ class Dictionary:
 
     def is_word(self, w):
         w = w.lower()
-        if len(w) < 4:
-            return False
-        return (w.encode('utf-8') in self.db) == 1
+        w = ''.join(e for e in w if e.isalnum())
+        return w in self.db
 
     def _open(self):
         try:

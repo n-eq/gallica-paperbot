@@ -54,8 +54,7 @@ for tweet in tweets:
         continue
     if hasattr(tweet, 'possibly_sensitive') and tweet.possibly_sensitive:
         continue
-    # Note : to avoid retweeting yourself add the user's @ to the block list
-    if tweet.user.screen_name in config.block:
+    if tweet.user.screen_name in config.user_blacklist:
         continue
     if last and tweet.created_at <= last:
         continue
