@@ -30,6 +30,7 @@ def init_logger():
                                        when="d",
                                        interval=1, # rotate every day
                                        backupCount=31)
+    handler.setFormatter(logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s'))
     logger.addHandler(handler)
 
 
