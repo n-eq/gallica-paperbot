@@ -10,10 +10,31 @@ import requests
 
 from lxml import etree
 
+import logging
+from logging.handlers import TimedRotatingFileHandler
+
+
 import twitter
 import config
 
+logger = None
+
+def init_logger():
+    global logger
+
+    logger = logging.getLogger("gallica-headline")
+    logger.setLevel(logging.DEBUG)
+
+    handler = TimedRotatingFileHandler(config.logfile,
+                                       utc=True, 
+                                       when="d",
+                                       interval=1, # rotate every day
+                                       backupCount=31)
+    logger.addHandler(handler)
+
+
 def main(argv):
+    global logger
     dry_run = False
     if len(argv) > 1: # for testing
         date = datetime.datetime.strptime(argv[1], '%Y/%m/%d')
@@ -23,10 +44,11 @@ def main(argv):
         today = datetime.date.today()
         date = datetime.date(today.year-100, today.month, today.day)
 
-    if not dry_run:
-        sys.stdout = open(config.logfile, 'a')
+#     if not dry_run:
+#         sys.stdout = open(config.logfile, 'a')
 
-    print("Running script for %s" % date.strftime("%m/%d/%Y"))
+    init_logger()
+    logger.debug("Running script for %s" % date.strftime("%m/%d/%Y"))
 
     records = get_records(date)
 
@@ -36,9 +58,9 @@ def main(argv):
 
     headlines.sort(key=cmp_block)
     headlines.reverse()
-    print("Sorted headlines: ")
+    logger.debug("Sorted headlines: ")
     for h in headlines[:10]:
-        print("[%d] %s, %s %s" % (cmp_block(h), h['text'].encode('utf-8'), h['paper'], h['url']))
+        logger.info("[%d] %s, %s %s" % (cmp_block(h), h['text'].encode('utf-8'), h['paper'], h['url']))
 
     if (len(headlines) > 0):
         h = headlines[0]
@@ -49,11 +71,11 @@ def main(argv):
         msg = format_status(h, date)
         twitter.tweet(msg, dry_run, f)
     else:
-        print("No headlines found.")
+        logger.error("No headlines found.")
 
-    if not dry_run:
-        sys.stdout.close()
-
+#     if not dry_run:
+#         sys.stdout.close()
+# 
 
 def prettify_paper_name(p):
     p = re.sub("\(.*?\)", "", p)
@@ -78,7 +100,7 @@ def get_records(date):
              "(gallicapublication_date=%22" + day + "%22)"\
              "&suggest=10&keywords=#resultat-id-1"
 
-    print("Search URL: %s" % search)
+    logger.debug("Search URL: %s" % search)
 
     try:
         xml = urllib.request.urlopen(search).read()
@@ -95,7 +117,7 @@ def get_records(date):
                     # take the shortest title (there are two versions)
                     if (paper_name == '') or ((paper_name != '') and len(child.text) < len(paper_name)):
                         paper_name = child.text
-                        print("new  paper: %s" % paper_name)
+                        logger.info("new paper: %s" % paper_name)
 
             paper_name = prettify_paper_name(paper_name)
 
@@ -118,7 +140,7 @@ def get_records(date):
             r = {'uri': uri, 'raw_text': raw_text, 'url': url, 'paper': paper_name}
             records.append(r)
     except Exception as e:
-        print(e)
+        logger.error(e)
         
     return records
 
@@ -140,7 +162,7 @@ def blocks(record):
         p = etree.XMLParser(encoding='utf-8')
         doc = etree.fromstring(xml, parser=p)
     except Exception as e:
-        print(e)
+        logger.error(e)
         return blocks
 
     for b in doc.xpath('//alto:TextBlock', namespaces=ns): 
@@ -168,7 +190,6 @@ def blocks(record):
         vpos = float(b.attrib['VPOS'])
 
         if record['paper'] in config.paper_blacklist:
-            print("Paper %s is blacklisted, skipping." % record['paper'])
             continue
 
         # Skip lines that are heuristically unlikely to be headlines
@@ -177,11 +198,11 @@ def blocks(record):
             continue
         if record['paper'] == 'Le Journal':
             if vpos < 1000:
-                print("Ignoring block %s because Le Journal and vpos < 1000" % text)
+                logger.info("Ignoring block %s because Le Journal and vpos < 1000" % text)
                 continue
         if record['paper'] == 'Le Rappel':
             if vpos < 1700:
-                print("Ignoring block %s because le rappel and vpos < 1000" % text)
+                logger.info("Ignoring block %s because le rappel and vpos < 1000" % text)
                 continue
 
         # ignore text > 80 characters, we're looking for short headlines
@@ -195,7 +216,7 @@ def blocks(record):
              'height': h, 'width': w, 'word_ratio': word_ratio,
              'vpos': vpos, 'url': record['url'], 'paper': record['paper']} 
 
-        print("Appending new block: %s" % b)
+        logger.info("Appending new block: %s" % b)
         blocks.append(b)
 
     return blocks
