@@ -1,19 +1,36 @@
 #!/usr/bin/env python
 
-import os
+import os, sys, re
 import dbm.ndbm
-import sys
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
-import datetime
-import re
-import requests
+import datetime, requests
 
 from lxml import etree
+
+import logging
+from logging.handlers import RotatingFileHandler
 
 import twitter
 import config
 
+logger = None
+
+def init_logger(dry_run = False):
+    global logger
+
+    logger = logging.getLogger("gallica-headline")
+    logger.setLevel(logging.DEBUG)
+
+    if dry_run:
+        handler = logging.StreamHandler(sys.stdout)
+    else:
+        # maxBytes is approximately 10 days
+        handler = RotatingFileHandler(filename=config.logfile, maxBytes=375*1024, backupCount=3)
+    handler.setFormatter(logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s'))
+    logger.addHandler(handler)
+
 def main(argv):
+    global logger
     dry_run = False
     if len(argv) > 1: # for testing
         date = datetime.datetime.strptime(argv[1], '%Y/%m/%d')
@@ -23,10 +40,8 @@ def main(argv):
         today = datetime.date.today()
         date = datetime.date(today.year-100, today.month, today.day)
 
-    if not dry_run:
-        sys.stdout = open(config.logfile, 'a')
-
-    print("Running script for %s" % date.strftime("%m/%d/%Y"))
+    init_logger(dry_run)
+    logger.info("Running script for %s" % date.strftime("%m/%d/%Y"))
 
     records = get_records(date)
 
@@ -36,9 +51,9 @@ def main(argv):
 
     headlines.sort(key=cmp_block)
     headlines.reverse()
-    print("Sorted headlines: ")
+    logger.info("Sorted headlines: ")
     for h in headlines[:10]:
-        print("[%d] %s, %s %s" % (cmp_block(h), h['text'].encode('utf-8'), h['paper'], h['url']))
+        logger.info("[%d] %s, %s %s" % (cmp_block(h), h['text'].encode('utf-8'), h['paper'], h['url']))
 
     if (len(headlines) > 0):
         h = headlines[0]
@@ -47,13 +62,9 @@ def main(argv):
         h['front_page'] = f
 
         msg = format_status(h, date)
-        twitter.tweet(msg, dry_run, f)
+        twitter.tweet(msg, logger, dry_run, f)
     else:
-        print("No headlines found.")
-
-    if not dry_run:
-        sys.stdout.close()
-
+        logger.error("No headlines found.")
 
 def prettify_paper_name(p):
     p = re.sub("\(.*?\)", "", p)
@@ -78,7 +89,7 @@ def get_records(date):
              "(gallicapublication_date=%22" + day + "%22)"\
              "&suggest=10&keywords=#resultat-id-1"
 
-    print("Search URL: %s" % search)
+    logger.info("Search URL: %s" % search)
 
     try:
         xml = urllib.request.urlopen(search).read()
@@ -95,7 +106,7 @@ def get_records(date):
                     # take the shortest title (there are two versions)
                     if (paper_name == '') or ((paper_name != '') and len(child.text) < len(paper_name)):
                         paper_name = child.text
-                        print("new  paper: %s" % paper_name)
+                        logger.info("new paper: %s" % paper_name)
 
             paper_name = prettify_paper_name(paper_name)
 
@@ -118,7 +129,7 @@ def get_records(date):
             r = {'uri': uri, 'raw_text': raw_text, 'url': url, 'paper': paper_name}
             records.append(r)
     except Exception as e:
-        print(e)
+        logger.error(e)
         
     return records
 
@@ -140,7 +151,7 @@ def blocks(record):
         p = etree.XMLParser(encoding='utf-8')
         doc = etree.fromstring(xml, parser=p)
     except Exception as e:
-        print(e)
+        logger.error(e)
         return blocks
 
     for b in doc.xpath('//alto:TextBlock', namespaces=ns): 
@@ -167,8 +178,8 @@ def blocks(record):
         w = int(b.attrib['WIDTH'])
         vpos = float(b.attrib['VPOS'])
 
-        if record['paper'] in config.paper_blacklist:
-            print("Paper %s is blacklisted, skipping." % record['paper'])
+        if record['paper'] in config.paper_blacklist or record['paper'].lower().startswith("bulletin"):
+            logger.info("Paper %s is blacklisted, skipping." % record['paper'])
             continue
 
         # Skip lines that are heuristically unlikely to be headlines
@@ -177,11 +188,11 @@ def blocks(record):
             continue
         if record['paper'] == 'Le Journal':
             if vpos < 1000:
-                print("Ignoring block %s because Le Journal and vpos < 1000" % text)
+                logger.info("Ignoring block because Le Journal and vpos < 1000")
                 continue
         if record['paper'] == 'Le Rappel':
             if vpos < 1700:
-                print("Ignoring block %s because le rappel and vpos < 1000" % text)
+                logger.info("Ignoring block because le rappel and vpos < 1000")
                 continue
 
         # ignore text > 80 characters, we're looking for short headlines
@@ -195,7 +206,7 @@ def blocks(record):
              'height': h, 'width': w, 'word_ratio': word_ratio,
              'vpos': vpos, 'url': record['url'], 'paper': record['paper']} 
 
-        print("Appending new block: %s" % b)
+        logger.info("Appending new block: %s" % b)
         blocks.append(b)
 
     return blocks
@@ -204,7 +215,7 @@ def cmp_block(block):
     return ((block['height'] * block['width']) ^ 2) * block['word_ratio'] * len(block['text']) * (1 / block['vpos']) * block['confidence'] * block['word_ratio']
 
 def get_frontpage(headline, date):
-    fname = "./" + datetime.datetime.strftime(date, '%d/%m/%Y').replace('/', '_') + ".jpeg"
+    fname = "./%s/%s.jpeg" % (config.assets, datetime.datetime.strftime(date, '%d/%m/%Y').replace('/', '_') )
 
     source_url = headline['url'] + "/f1.highres"
     with open(fname, "wb") as f:
