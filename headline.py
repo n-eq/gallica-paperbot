@@ -13,7 +13,6 @@ from lxml import etree
 import logging
 from logging.handlers import TimedRotatingFileHandler
 
-
 import twitter
 import config
 
@@ -28,7 +27,7 @@ def init_logger():
     handler = TimedRotatingFileHandler(config.logfile,
                                        utc=True, 
                                        when="d",
-                                       interval=1, # rotate every day
+                                       interval=7, # rotate every week
                                        backupCount=31)
     handler.setFormatter(logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s'))
     logger.addHandler(handler)
@@ -49,7 +48,7 @@ def main(argv):
 #         sys.stdout = open(config.logfile, 'a')
 
     init_logger()
-    logger.debug("Running script for %s" % date.strftime("%m/%d/%Y"))
+    logger.info("Running script for %s" % date.strftime("%m/%d/%Y"))
 
     records = get_records(date)
 
@@ -59,7 +58,7 @@ def main(argv):
 
     headlines.sort(key=cmp_block)
     headlines.reverse()
-    logger.debug("Sorted headlines: ")
+    logger.info("Sorted headlines: ")
     for h in headlines[:10]:
         logger.info("[%d] %s, %s %s" % (cmp_block(h), h['text'].encode('utf-8'), h['paper'], h['url']))
 
@@ -101,7 +100,7 @@ def get_records(date):
              "(gallicapublication_date=%22" + day + "%22)"\
              "&suggest=10&keywords=#resultat-id-1"
 
-    logger.debug("Search URL: %s" % search)
+    logger.info("Search URL: %s" % search)
 
     try:
         xml = urllib.request.urlopen(search).read()
