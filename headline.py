@@ -15,20 +15,22 @@ import config
 
 logger = None
 
-def init_logger():
+def init_logger(dry_run = False):
     global logger
 
     logger = logging.getLogger("gallica-headline")
     logger.setLevel(logging.DEBUG)
 
-    handler = TimedRotatingFileHandler(config.logfile,
-                                       utc=True, 
-                                       when="d",
-                                       interval=7, # rotate every week
-                                       backupCount=31)
+    if dry_run:
+        handler = logging.StreamHandler(sys.stdout)
+    else:
+        handler = TimedRotatingFileHandler(config.logfile,
+                                           utc=True, 
+                                           when="d",
+                                           interval=7, # rotate every week (7d)
+                                           backupCount=31)
     handler.setFormatter(logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s'))
     logger.addHandler(handler)
-
 
 def main(argv):
     global logger
@@ -41,10 +43,7 @@ def main(argv):
         today = datetime.date.today()
         date = datetime.date(today.year-100, today.month, today.day)
 
-#     if not dry_run:
-#         sys.stdout = open(config.logfile, 'a')
-
-    init_logger()
+    init_logger(dry_run)
     logger.info("Running script for %s" % date.strftime("%m/%d/%Y"))
 
     records = get_records(date)
@@ -69,10 +68,6 @@ def main(argv):
         twitter.tweet(msg, logger, dry_run, f)
     else:
         logger.error("No headlines found.")
-
-#     if not dry_run:
-#         sys.stdout.close()
-# 
 
 def prettify_paper_name(p):
     p = re.sub("\(.*?\)", "", p)
