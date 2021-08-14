@@ -66,7 +66,7 @@ def main(argv):
         h['front_page'] = f
 
         msg = format_status(h, date)
-        twitter.tweet(msg, dry_run, f)
+        twitter.tweet(msg, logger, dry_run, f)
     else:
         logger.error("No headlines found.")
 
