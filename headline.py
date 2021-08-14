@@ -1,12 +1,9 @@
 #!/usr/bin/env python
 
-import os
+import os, sys, re
 import dbm.ndbm
-import sys
 import urllib.request, urllib.parse, urllib.error, urllib.request, urllib.error, urllib.parse
-import datetime
-import re
-import requests
+import datetime, requests
 
 from lxml import etree
 

@@ -2,10 +2,11 @@
 Little utilities around tweepy for twitter interaction.
 """
 
-import sys
+import os, sys
 import tweepy
 import config
-import os
+
+import logging
 
 auth = tweepy.OAuthHandler(config.twitter_oauth_consumer_key, 
                            config.twitter_oauth_consumer_secret)
