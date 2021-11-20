@@ -25,4 +25,5 @@ paper_blacklist = ['Feuilleton',
         "Bulletin religieux de l'archidiocèse de Rouen",
         "Bulletin périodique de la presse grecque",
         "Bulletin périodique de la presse allemande",
+	"Journal des mutilés, réformés et blessés de guerre",
         "Comoedia"]
