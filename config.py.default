@@ -33,4 +33,5 @@ paper_blacklist = ['Feuilleton',
         "Bulletin périodique de la presse polonaise",
         "Bulletin périodique de la presse sud-américaine",
         "Journal des mutilés, réformés et blessés de guerre",
-        "Alger-programmes"]
+        "Alger-programmes",
+        "Comoedia"]
