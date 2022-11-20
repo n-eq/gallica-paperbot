@@ -34,4 +34,9 @@ paper_blacklist = ['Feuilleton',
         "Bulletin périodique de la presse sud-américaine",
         "Journal des mutilés, réformés et blessés de guerre",
         "Alger-programmes",
+        "La Construction moderne. Cours officiels des matériaux de construction et bulletin des adjudications du département de la Seine",
+        'Les Travaux ["puis" nord-africains]',
+        "Les Affiches saïgonnaises. Cochinchine, Cambodge, Annam. Journal hebdomadaire. Organe de publicité",
+        "L'Ami du clergé paroissial",
+        "Recueil de médecine vétérinaire"]
         "Comoedia"]
