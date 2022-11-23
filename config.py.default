@@ -38,5 +38,6 @@ paper_blacklist = ['Feuilleton',
         'Les Travaux ["puis" nord-africains]',
         "Les Affiches saïgonnaises. Cochinchine, Cambodge, Annam. Journal hebdomadaire. Organe de publicité",
         "L'Ami du clergé paroissial",
-        "Recueil de médecine vétérinaire"]
+        "Recueil de médecine vétérinaire",
+        "La Semaine religieuse du diocèse d'Alby"
         "Comoedia"]
