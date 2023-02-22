@@ -181,7 +181,8 @@ def blocks(record):
         w = int(b.attrib['WIDTH'])
         vpos = float(b.attrib['VPOS'])
 
-        if record['paper'] in config.paper_blacklist:
+        if record['paper'] in config.paper_blacklist or record['paper'].lower().startswith("bulletin"):
+            print("Paper %s is blacklisted, skipping." % record['paper'])
             continue
 
         # Skip lines that are heuristically unlikely to be headlines
