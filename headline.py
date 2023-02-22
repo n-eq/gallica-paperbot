@@ -218,7 +218,7 @@ def cmp_block(block):
     return ((block['height'] * block['width']) ^ 2) * block['word_ratio'] * len(block['text']) * (1 / block['vpos']) * block['confidence'] * block['word_ratio']
 
 def get_frontpage(headline, date):
-    fname = "./" + datetime.datetime.strftime(date, '%d/%m/%Y').replace('/', '_') + ".jpeg"
+    fname = "./%s/%s.jpeg" % (config.assets, datetime.datetime.strftime(date, '%d/%m/%Y').replace('/', '_') )
 
     source_url = headline['url'] + "/f1.highres"
     with open(fname, "wb") as f:
