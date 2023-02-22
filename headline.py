@@ -190,11 +190,11 @@ def blocks(record):
             continue
         if record['paper'] == 'Le Journal':
             if vpos < 1000:
-                logger.info("Ignoring block %s because Le Journal and vpos < 1000" % text)
+                logger.info("Ignoring block because Le Journal and vpos < 1000")
                 continue
         if record['paper'] == 'Le Rappel':
             if vpos < 1700:
-                logger.info("Ignoring block %s because le rappel and vpos < 1000" % text)
+                logger.info("Ignoring block because le rappel and vpos < 1000")
                 continue
 
         # ignore text > 80 characters, we're looking for short headlines
