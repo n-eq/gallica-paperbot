@@ -8,7 +8,7 @@ import datetime, requests
 from lxml import etree
 
 import logging
-from logging.handlers import TimedRotatingFileHandler
+from logging.handlers import RotatingFileHandler
 
 import twitter
 import config
@@ -24,11 +24,8 @@ def init_logger(dry_run = False):
     if dry_run:
         handler = logging.StreamHandler(sys.stdout)
     else:
-        handler = TimedRotatingFileHandler(config.logfile,
-                                           utc=True, 
-                                           when="d",
-                                           interval=7, # rotate every week (7d)
-                                           backupCount=31)
+        # maxBytes is approximately 10 days
+        handler = RotatingFileHandler(filename=config.logfile, maxBytes=375*1024, backupCount=3)
     handler.setFormatter(logging.Formatter('%(asctime)s - [%(levelname)s] %(message)s'))
     logger.addHandler(handler)
 
@@ -182,7 +179,7 @@ def blocks(record):
         vpos = float(b.attrib['VPOS'])
 
         if record['paper'] in config.paper_blacklist or record['paper'].lower().startswith("bulletin"):
-            print("Paper %s is blacklisted, skipping." % record['paper'])
+            logger.info("Paper %s is blacklisted, skipping." % record['paper'])
             continue
 
         # Skip lines that are heuristically unlikely to be headlines
