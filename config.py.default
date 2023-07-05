@@ -46,4 +46,7 @@ paper_blacklist = [
         'Feuilletons / Sénat',
         'Le Poilu de France. Journal des anciens combattants ["puis" Organe de l\'Association nationale des anciens combattants Le Poilu de France]',
         'Les Travaux ["puis" nord-africains]',
+        "[Le Recrutement sacerdotal]",
+        "La Semaine vétérinaire",
+        "Circulaire - Confédération française des travailleurs chrétiens"
 ]
